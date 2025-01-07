@@ -71,6 +71,7 @@ class VGG16(nn.Module):
 
         self.fc_layer = nn.Sequential(
             ## CIFAR10은 크기가 32 X 32 이므로
+            ## 32 -> 16 -> 8 -> 4 -> 2 -> 1 (pooling 5번)
             nn.Linear(8 * base_dim * 1 * 1, 4096),
             nn.ReLU(),
             nn.Dropout(),
