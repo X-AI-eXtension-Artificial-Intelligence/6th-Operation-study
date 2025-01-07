@@ -13,7 +13,7 @@
     - FC layer 1000
     
 '''
-
+  
 import torch
 import torch.nn as nn
 import torch.optim as optim
