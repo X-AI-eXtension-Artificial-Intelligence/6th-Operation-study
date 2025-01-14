@@ -37,5 +37,5 @@ def show_images(dataset):
 
 
 if __name__ == '__main__':
-    train_set, test_set = data_transform()
+    train_set = data_transform()
     show_images(train_set)
