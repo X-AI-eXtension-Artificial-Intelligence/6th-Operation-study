@@ -11,7 +11,7 @@ FC layer x3
 - FC layer 4096
 - FC layer 4096
 - FC layer 1000
-'''
+''' 
 
 import torch
 import torch.nn as nn
