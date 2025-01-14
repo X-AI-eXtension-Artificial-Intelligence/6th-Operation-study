@@ -51,7 +51,7 @@ class VGG16(nn.Module):
         )
         self.fc_layer = nn.Sequential(
             # CIFAR10은 크기가 32x32이므로
-            nn.Linear(8*base_dim*1*1, 4096), # 512, 4096
+            nn.Linear(8*base_dim*1*1, 4096), # 512, 4096 왜 1*1 사용 ? -> 가독성. 펼쳐지는 걸 보여주는 / 7*7
             nn.ReLU(True), # in-place 연산 True 의미. 텐서를 새롭게 생성하지 않고 기존 메모리를 덮어쓰는 방식으로 연산을 수행
             nn.Dropout(),
             nn.Linear(4096, 1000),
