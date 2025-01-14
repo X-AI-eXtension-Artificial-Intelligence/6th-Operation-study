@@ -1,17 +1,19 @@
+## VGG19로 변경
+
 '''
 VGGNet 구조
 
 !! kernel_size=3x3, stride=1, padding=1로 고정
 3x3 합성곱 연산 x2 (채널 64)
 3x3 합성곱 연산 x2 (채널 128)
-3x3 합성곱 연산 x3 (채널 256)
-3x3 합성곱 연산 x3 (채널 512)
-3x3 합성곱 연산 x3 (채널 512)
+3x3 합성곱 연산 x (3 + 1) (채널 256)
+3x3 합성곱 연산 x (3 + 1) (채널 512)
+3x3 합성곱 연산 x (3 + 1) (채널 512)
 FC layer x3
 - FC layer 4096
 - FC layer 4096
 - FC layer 1000
-''' 
+'''
 
 import torch
 import torch.nn as nn
@@ -28,9 +30,12 @@ def conv2_block(in_dim, out_dim):
     return model
 
 
-def conv3_block(in_dim, out_dim):
+
+def conv4_block(in_dim, out_dim):
     model = nn.Sequential(
             nn.Conv2d(in_dim, out_dim, kernel_size = 3, padding = 1), 
+            nn.ReLU(), 
+            nn.Conv2d(out_dim, out_dim, kernel_size = 3, padding = 1), 
             nn.ReLU(), 
             nn.Conv2d(out_dim, out_dim, kernel_size = 3, padding = 1), 
             nn.ReLU(), 
@@ -50,9 +55,9 @@ class VGG16(nn.Module):
         self.feature = nn.Sequential(
             conv2_block(3, base_dim), ## base_dim = 64 / 3 -> 64
             conv2_block(base_dim, 2*base_dim), ## 64 -> 128
-            conv3_block(2*base_dim, 4*base_dim), ## 128 -> 256
-            conv3_block(4*base_dim, 8*base_dim), ## 256 -> 512
-            conv3_block(8*base_dim, 8*base_dim) ## 512 -> 512
+            conv4_block(2*base_dim, 4*base_dim), ## 128 -> 256
+            conv4_block(4*base_dim, 8*base_dim), ## 256 -> 512
+            conv4_block(8*base_dim, 8*base_dim) ## 512 -> 512
             )
 
         ## 완전 연결 레이어 정의

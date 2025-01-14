@@ -18,7 +18,7 @@ def load_model(model_path, device):
 ## 이미지 파일 전처리 함수
 def preprocess_image(image_path):
     transform = transforms.Compose([
-        transforms.Resize((32, 32)),  ## CIFAR-10 크기에 맞게 조정
+        transforms.Resize((224, 224)),  ## CIFAR-10 크기에 맞게 조정
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) 
     ])
@@ -38,15 +38,15 @@ if __name__ == '__main__':
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     ## CIFAR-10 클래스 정의
-    classes = ('plane', 'car', 'bird', 'cat', 'deer', 
-               'dog', 'frog', 'horse', 'ship', 'truck')
+    classes = ('cane', 'cavallo', 'elefante', 'farfalla', 'gallina', 
+               'gatto', 'mucca', 'pecora', 'ragno', 'scoiattolo')
 
     ## 모델 로드
-    model_path = "./VGG16/vgg16_cifar10.pth"  ## 저장된 모델 경로
+    model_path = "./VGG16/vgg16_animals_10.pth"  ## 저장된 모델 경로
     model = load_model(model_path, device)
 
     ## 이미지 전처리
-    image_path = "./VGG16/개구리사진.png"  ## 테스트할 이미지 경로
+    image_path = "./VGG16/코끼리사진.jpg"  ## 테스트할 이미지 경로
     image_tensor = preprocess_image(image_path)
 
     ## 이미지 예측
