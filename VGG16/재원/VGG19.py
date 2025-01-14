@@ -1,3 +1,19 @@
+# 실험중 E번 setting에 해당하는 VGG19 구현(Conv layer 16 + FC layer 3)
+# VGG19 Architecture Summary - 3*3 Conv filter(stride = 1), MaxPooling(stride = 2), Activation(ReLU)
+
+
+
+# 필요 라이브러리 import
+import torchvision 
+
+
+import torchvision.datasets as datasets #torchvision dataset 불러오기
+import torchvision.transforms as transforms #이미지 변환 기능
+from torch.utils.data import DataLoader #torchvision dataset 불러오기, 학습/테스트셋 준비
+import matplotlib.pyplot as plt #성능 등 그래프 표시
+import numpy as np 
+import torch.nn as nn #파이토치 모듈 - 레이어 구성, 정규화, 손실함수, 활성화 함수 등
+
 import torch #파이토치 library - 네트워크 학습, 자동 미분, CUDA 사용
 import torch.nn as nn #파이토치 모듈 - 레이어 구성, 정규화, 손실함수, 활성화 함수 등
 
