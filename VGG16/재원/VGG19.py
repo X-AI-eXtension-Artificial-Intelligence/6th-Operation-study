@@ -1,6 +1,8 @@
 # 실험중 E번 setting에 해당하는 VGG19 구현(Conv layer 16 + FC layer 3)
 # VGG19 Architecture Summary - 3*3 Conv filter(stride = 1), MaxPooling(stride = 2), Activation(ReLU)
 
+
+
 # 필요 라이브러리 import
 import torchvision 
 
