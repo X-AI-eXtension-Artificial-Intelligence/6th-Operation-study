@@ -52,7 +52,8 @@ def conv_3_block(in_dim,out_dim):
 # 첫 번째 convolution layer의 입력 채널 수는 3 -> RGB 이미지
 
 # fc layer에서 최종 출력 개수는 class 수
-# 1*1을 붙인 이유 : 1차원 벡터로 flatten되었다는 것을 나타내기 위함 (코드 가독성)
+# CIFAR10은 크기가 32x32이므로 nn.Linear(8*base_dim*1*1, 4096)
+# IMAGENET이면 224x224이므로 nn.Linear(8*base_dim*7*7, 4096)
 
 # view()를 통해 feature extractor에서 나온 feature map을 1차원 벡터로 펼침
 
