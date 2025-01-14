@@ -3,6 +3,8 @@
 
 # 필요 라이브러리 import
 import torchvision 
+
+
 import torchvision.datasets as datasets #torchvision dataset 불러오기
 import torchvision.transforms as transforms #이미지 변환 기능
 from torch.utils.data import DataLoader #torchvision dataset 불러오기, 학습/테스트셋 준비
