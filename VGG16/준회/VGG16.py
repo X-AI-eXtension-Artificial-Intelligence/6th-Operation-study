@@ -13,7 +13,6 @@
     - FC layer 1000
     
 '''
-    
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -35,9 +34,11 @@ import torchvision.transforms as transforms
 def conv2_block(in_dim, out_dim):
     model = nn.Sequential(
         nn.Conv2d(in_dim, out_dim, kernel_size = 3, padding = 1),
+        nn.BatchNorm2d(out_dim),
         nn.ReLU(),
         nn.Conv2d(out_dim, out_dim, kernel_size = 3, padding = 1),
-        nn.ReLU(),
+        nn.BatchNorm2d(out_dim),
+        nn.GELU(),
         nn.MaxPool2d(2, 2)
     )
     return model
@@ -46,11 +47,14 @@ def conv2_block(in_dim, out_dim):
 def conv3_block(in_dim, out_dim):
     model = nn.Sequential(
         nn.Conv2d(in_dim, out_dim, kernel_size = 3, padding = 1),
+        nn.BatchNorm2d(out_dim),
         nn.ReLU(), 
         nn.Conv2d(out_dim, out_dim, kernel_size = 3, padding = 1),
+        nn.BatchNorm2d(out_dim),
         nn.ReLU(),
         nn.Conv2d(out_dim, out_dim, kernel_size = 3, padding = 1),
-        nn.ReLU(),
+        nn.BatchNorm2d(out_dim),
+        nn.GELU(),
         nn.MaxPool2d(2, 2)
     )
     return model
@@ -63,22 +67,21 @@ class VGG16(nn.Module):
         super(VGG16, self).__init__()
         self.feature = nn.Sequential(
             conv2_block(3, base_dim), ## RGB -> 64채널
-            conv2_block(base_dim, 2 * base_dim), ## 64 -> 128
-            conv3_block(2 * base_dim, 4 * base_dim), ## 128 -> 256
+            conv2_block(base_dim, base_dim), ## 64 -> 128
+            conv3_block(base_dim, 4 * base_dim), ## 128 -> 256
             conv3_block(4 * base_dim, 8 * base_dim), ## 256 -> 512
             conv3_block(8 * base_dim, 8 * base_dim) ## 512 -> 512
         )
 
         self.fc_layer = nn.Sequential(
             ## CIFAR10은 크기가 32 X 32 이므로
-            ## 32 -> 16 -> 8 -> 4 -> 2 -> 1 (pooling 5번)
-            nn.Linear(8 * base_dim * 1 * 1, 4096),
+            nn.Linear(8 * base_dim * 7 * 7, 8192),
             nn.ReLU(),
             nn.Dropout(),
-            nn.Linear(4096, 1000), ## 4096 -> 1000
+            nn.Linear(8192, 2000), ## 8192 -> 2000
             nn.ReLU(),
             nn.Dropout(),
-            nn.Linear(1000, num_classes) ## 1000 -> 10
+            nn.Linear(2000, num_classes) ## 2000 -> 10
         )
     
     def forward(self, x):
