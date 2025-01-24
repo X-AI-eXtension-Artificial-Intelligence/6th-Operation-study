@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from data_loader import CityscapeDataset  # 데이터 로더
 from model import Unet  # 모델
 import joblib
-
+  
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
