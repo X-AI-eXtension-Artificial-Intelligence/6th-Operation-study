@@ -8,7 +8,7 @@ from sklearn.cluster import KMeans
 
 class CityscapeDataset(Dataset):
     def __init__(self, image_dir, label_model, transform=None):
-        """
+        """  
         초기화 메서드
         Args:
             image_dir (str): 이미지 파일이 저장된 디렉토리
