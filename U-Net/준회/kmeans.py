@@ -9,6 +9,6 @@ data = data.astype(int)
 # KMeans 모델 생성 및 훈련
 kmeans = KMeans(n_clusters=10, random_state=42)
 kmeans.fit(data)
-
+  
 # 모델 저장
 joblib.dump(kmeans, 'kmeans_model.pkl')
