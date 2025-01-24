@@ -16,7 +16,7 @@ from tqdm.notebook import tqdm
 from data_loader import get_loader  # 수정된 데이터 로더를 사용합니다.
 from model import Unet
 import joblib
-
+  
 kmeans = joblib.load('kmeans_model.pkl')
 
 
