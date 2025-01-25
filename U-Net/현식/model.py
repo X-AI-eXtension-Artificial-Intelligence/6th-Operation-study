@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-## 네트워크 구축하기
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()

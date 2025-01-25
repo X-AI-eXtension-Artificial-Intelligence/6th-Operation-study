@@ -22,7 +22,10 @@ def load(ckpt_dir, net, optim):
     dict_model = torch.load('./%s/%s' % (ckpt_dir, ckpt_lst[-1]))
 
     net.load_state_dict(dict_model['net'])
-    optim.load_state_dict(dict_model['optim'])
+
+    if optim is not None and 'optim' in dict_model:
+        optim.load_state_dict(dict_model['optim'])
+        
     epoch = int(ckpt_lst[-1].split('epoch')[1].split('.pth')[0])
 
     return net, optim, epoch
