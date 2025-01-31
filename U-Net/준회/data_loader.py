@@ -7,20 +7,30 @@ from torchvision import transforms
 from sklearn.cluster import KMeans
 
 class CityscapeDataset(Dataset):
-    def __init__(self, image_dir, label_model, transform=None):
-        """  
+    def __init__(self, image_dir, mask_dir, transform=None):
+        """
         초기화 메서드
         Args:
             image_dir (str): 이미지 파일이 저장된 디렉토리
+            mask_dir (str): 마스크 파일이 저장된 디렉토리
             label_model (KMeans): 픽셀 레이블을 예측하는 데 사용할 사전 훈련된 K-means 모델
             transform (callable, optional): 이미지에 적용할 전처리 함수
         """
         self.image_dir = image_dir
-        self.image_fns = [fn for fn in os.listdir(image_dir) if fn.endswith('.jpg')]
-        self.label_model = label_model
+        self.mask_dir = mask_dir
+        # 지원되는 확장자 목록
+        supported_extensions = ('.png', '.jpg', '.jpeg')
+        self.image_fns = [fn for fn in os.listdir(image_dir)
+                          if fn.lower().endswith(supported_extensions)]
+
         self.transform = transform or transforms.Compose([
+            transforms.Resize((512, 512)),  # 적절한 크기로 변경
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        self.mask_transform = transforms.Compose([
+            transforms.Resize((512, 512)),  # 마스크도 같은 크기로 조정
+            transforms.ToTensor()  # 마스크는 정규화하지 않음
         ])
 
     def __len__(self):
@@ -28,29 +38,22 @@ class CityscapeDataset(Dataset):
         return len(self.image_fns)
 
     def __getitem__(self, index):
-        """인덱스에 해당하는 이미지를 로드 및 전처리 후 반환"""
+        """인덱스에 해당하는 이미지와 마스크를 로드 및 전처리 후 반환"""
         image_fn = self.image_fns[index]
         image_fp = os.path.join(self.image_dir, image_fn)
-        image = Image.open(image_fp)
-        image = np.array(image)
+        mask_fp = os.path.join(self.mask_dir, os.path.splitext(image_fn)[0] + '.png')  # 마스크 파일은 .png
         
-        cityscape, label = self.split_image(image)
-        
-        label_class = self.label_model.predict(label.reshape(-1, 3)).reshape(label.shape[0], label.shape[1])
-        label_class = torch.tensor(label_class, dtype=torch.long)
-        
-        cityscape = self.transform(cityscape)
-        
-        return cityscape, label_class
+        image = Image.open(image_fp).convert('RGB')
+        mask = Image.open(mask_fp).convert('L')  # 흑백 이미지로 변환
 
-    def split_image(self, image):
-        """이미지를 도시 경관과 레이블 이미지로 분리"""
-        mid_point = image.shape[1] // 2
-        cityscape = image[:, :mid_point, :]
-        label = image[:, mid_point:, :]
-        return cityscape, label
+        image = self.transform(image)
+        mask = self.mask_transform(mask)
+            
+        mask = mask.squeeze(0)  # ToTensor 후에 추가된 첫 번째 차원을 제거
 
-def get_loader(image_dir, label_model, batch_size=4, shuffle=True, num_workers=0):
+        return image, mask.long()  # 마스크 데이터를 long 타입으로 변환
+
+def get_loader(image_dir, mask_dir, label_model, batch_size=4, shuffle=True, num_workers=0):
     """
     데이터 로더를 생성하고 반환하는 함수
     Args:
@@ -62,6 +65,6 @@ def get_loader(image_dir, label_model, batch_size=4, shuffle=True, num_workers=0
     Returns:
         DataLoader: 생성된 데이터 로더
     """
-    dataset = CityscapeDataset(image_dir, label_model)
+    dataset = CityscapeDataset(image_dir, mask_dir)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
     return loader
