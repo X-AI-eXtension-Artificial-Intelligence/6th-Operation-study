@@ -3,3 +3,13 @@
 *.iml
 *.venv
 *.cache
+/U-Net/민지/wandb
+/U-Net/민지/result
+/U-Net/민지/dataset
+/U-Net/민지/__pycache__
+/U-Net/민지/model
+*.npy
+*.png
+*.jpg
+*.jpeg
+*.tif

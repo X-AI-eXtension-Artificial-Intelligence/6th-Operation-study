@@ -4,27 +4,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from data_loader import CityscapeDataset  # 데이터 로더
+from data_loader import get_loader  # 데이터 로더 함수 사용
 from model import Unet  # 모델
+import os
 import joblib
-  
+from sklearn.cluster import KMeans
+kmeans = joblib.load('../XAI/Unet/kmeans_model.pkl')
 
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # 모델 경로 설정
-    model_name = 'unet_model.pth'
-    
-    num_classes = 10  # 클래스 수 설정
-    model = Unet().to(device)
+    # 모델 로드
+    model_name = '../XAI/Unet/unet_model.pth'
+    model = Unet().to(device)  # num_classes 제거
     model.load_state_dict(torch.load(model_name))
-    kmeans = joblib.load('kmeans_model.pkl')
 
     # 데이터셋 및 데이터 로더 설정
-    val_dir = '../XAI/Unet/dataset/val'  # 검증 데이터셋 경로
-    test_batch_size = 8
-    dataset = CityscapeDataset(val_dir, kmeans)  # 레이블 모델을 num_classes로 대체
-    data_loader = DataLoader(dataset, batch_size=test_batch_size)
+    val_image_dir = '../XAI/Unet/dataset/Flood/val/Image'  # 검증 이미지 데이터셋 경로
+    val_mask_dir = '../XAI/Unet/dataset/Flood/val/Mask'    # 검증 마스크 데이터셋 경로
+    test_batch_size = 4
+    data_loader = get_loader(val_image_dir, val_mask_dir, kmeans, batch_size=test_batch_size)
 
     X, Y = next(iter(data_loader))
     X, Y = X.to(device), Y.to(device)
@@ -36,7 +35,7 @@ def main():
         transforms.Normalize((-0.485/0.229, -0.456/0.224, -0.406/0.225), (1/0.229, 1/0.224, 1/0.225))
     ])
 
-    fig, axes = plt.subplots(test_batch_size, 3, figsize=(15, 5*test_batch_size))
+    fig, axes = plt.subplots(test_batch_size, 3, figsize=(15, 5 * test_batch_size))
     iou_scores = []
 
     for i in range(test_batch_size):
