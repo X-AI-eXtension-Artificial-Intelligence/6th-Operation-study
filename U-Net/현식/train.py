@@ -1,25 +1,21 @@
 import os
-from PIL import Image
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from tqdm.notebook import tqdm
 
 from data_read import *
 from dataset import *
+from KMeans import *
 from model import *
 
 batch_size = 4
-epochs = 5
+epochs = 10
 lr = 0.01
 
 dataset = CityscapeDataset(train_dir, label_model)
@@ -43,9 +39,12 @@ for epoch in tqdm(range(epochs)) :
     loss = criterion(Y_pred, Y)
     loss.backward()
     optimizer.step()
+
     epoch_loss += loss.item()
     step_losses.append(loss.item())
+
   epoch_losses.append(epoch_loss/len(data_loader))
+  print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_losses[-1]:.4f}")
 
 model_save_path = "./saved_model/unet_weights.pth"
 os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
