@@ -1,84 +1,50 @@
 import os
-import numpy as np
 from PIL import Image
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 
-dir_data = './datasets'
-name_label = 'train-labels.tif'
-name_input = 'train-volume.tif'
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 
-img_label = Image.open(os.path.join(dir_data, name_label))
-img_input = Image.open(os.path.join(dir_data, name_input))
+from tqdm.notebook import tqdm
 
-ny, nx = img_label.size
-nframe = img_label.n_frames
+# GPU 설정하기
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+device = torch.device(device)
+print(device)
 
-nframe_train = 24
-nframe_val = 3
-nframe_test = 3
+# 데이터 경로
+root_path = './cityscapes_data'
+data_dir = root_path
 
-dir_save_train = os.path.join(dir_data, 'train')
-dir_save_val = os.path.join(dir_data, 'val')
-dir_save_test = os.path.join(dir_data, 'test')
+# data_dir의 경로(문자열)와 train(문자열)을 결합해서 train_dir(train 폴더의 경로)에 저장
+train_dir = os.path.join(data_dir, "train")
 
-if not os.path.exists(dir_save_train):
-    os.makedirs(dir_save_train)
+# data_dir의 경로(문자열)와 val(문자열)을 결합해서 val_dir(val 폴더의 경로)에 저장
+val_dir = os.path.join(data_dir, "val")
 
-if not os.path.exists(dir_save_val):
-    os.makedirs(dir_save_val)
+# train_dir 경로에 있는 모든 파일을 리스트의 형태로 불러와서 train_fns에 저장
+train_fns = os.listdir(train_dir)
 
-if not os.path.exists(dir_save_test):
-    os.makedirs(dir_save_test)
+# val_dir 경로에 있는 모든 파일을 리스트의 형태로 불러와서 val_fns에 저장
+val_fns = os.listdir(val_dir)
 
-id_frame = np.arange(nframe)
-np.random.shuffle(id_frame)
-
-offset_nframe = 0
-for i in range(nframe_train):
-    img_label.seek(id_frame[i+offset_nframe])
-    img_input.seek(id_frame[i+offset_nframe])
-
-    label_ = np.asarray(img_label)
-    input_ = np.asarray(img_input)
-
-    np.save(os.path.join(dir_save_train, 'label_%03d.npy' % i), label_)
-    np.save(os.path.join(dir_save_train, 'input_%03d.npy' % i), input_)
-
-offset_nframe  += nframe_train
-
-for i in range(nframe_val):
-    img_label.seek(id_frame[i+offset_nframe])
-    img_input.seek(id_frame[i+offset_nframe])
-
-    label_ = np.asarray(img_label)
-    input_ = np.asarray(img_input)
-
-    np.save(os.path.join(dir_save_val, 'label_%03d.npy' % i), label_)
-    np.save(os.path.join(dir_save_val, 'input_%03d.npy' % i), input_)
+print(len(train_fns), len(val_fns))
 
 
-offset_nframe  += nframe_val
-
-for i in range(nframe_test):
-    img_label.seek(id_frame[i+offset_nframe])
-    img_input.seek(id_frame[i+offset_nframe])
-
-    label_ = np.asarray(img_label)
-    input_ = np.asarray(img_input)
-
-    np.save(os.path.join(dir_save_test, 'label_%03d.npy' % i), label_)
-    np.save(os.path.join(dir_save_test, 'input_%03d.npy' % i), input_)
+# 0~255 사이의 숫자를 3*num_items번 랜덤하게 뽑기
+num_items = 1000
+color_array = np.random.choice(range(256), 3*num_items).reshape(-1, 3)
+print(color_array.shape)
 
 
-plt.subplot(121)
-plt.imshow(label_, cmap='gray')
-plt.title('label')
-
-plt.subplot(122)
-plt.imshow(input_, cmap='gray')
-plt.title('input')
-
-plt.show()
-
-
-
+# K-means clustering 알고리즘을 사용하여 label_model에 저장 및 학습
+num_classes = 10
+label_model = KMeans(n_clusters = num_classes)
+label_model.fit(color_array)
