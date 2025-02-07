@@ -24,17 +24,16 @@ class CityscapeDataset(Dataset):
                           if fn.lower().endswith(supported_extensions)]
 
         self.transform = transform or transforms.Compose([
-            transforms.Resize((512, 512)),  # 적절한 크기로 변경
+            transforms.Resize((512, 512)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         self.mask_transform = transforms.Compose([
-            transforms.Resize((512, 512)),  # 마스크도 같은 크기로 조정
+            transforms.Resize((512, 512)),
             transforms.ToTensor()  # 마스크는 정규화하지 않음
         ])
 
     def __len__(self):
-        """데이터셋 내 이미지의 총 개수 반환"""
         return len(self.image_fns)
 
     def __getitem__(self, index):
