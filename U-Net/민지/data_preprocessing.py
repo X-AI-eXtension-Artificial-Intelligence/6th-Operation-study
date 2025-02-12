@@ -85,6 +85,7 @@ def data_preprocessing(data_dir):
         np.save(os.path.join(dir_save_test, f'label_{i:03d}.npy'), img_label)
         np.save(os.path.join(dir_save_test, f'input_{i:03d}.npy'), img_input)
 
+
 if __name__ == '__main__':
     data_dir=".\\dataset\\"
     # download_kaggle_dset(data_dir)

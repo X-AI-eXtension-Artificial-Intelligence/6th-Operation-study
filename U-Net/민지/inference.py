@@ -35,7 +35,8 @@ def evaluate_model(setting_config: dict):
         for batch, data in enumerate(test_loader):
             label = data['label'].to(device)
             inputs = data['input'].to(device)
-            output = model(inputs)  # forward
+            inputs_canny = data['input_canny'].to(device)
+            output = model(inputs, inputs_canny)  # forward
 
             pred_mask = (output > 0.5).float()
             label_mask = label.squeeze(1)
@@ -66,7 +67,7 @@ def evaluate_model(setting_config: dict):
 
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-    model_path = "./model/unet_dog.pth"
+    model_path = "./model/unet_dog_3.pth"
 
     setting_config = {
         "batch_size": 1,

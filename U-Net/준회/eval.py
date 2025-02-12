@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from data_loader import get_loader  # 데이터 로더 함수 사용
-from model import Unet  # 모델
+from UnetMB import UnetMB  # 모델
 import os
 import joblib
 from sklearn.cluster import KMeans
@@ -15,14 +15,14 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     # 모델 로드
-    model_name = '../XAI/Unet/unet_model.pth'
-    model = Unet().to(device)  # num_classes 제거
+    model_name = '../XAI/Unet/unetMB.pth'
+    model = UnetMB().to(device) 
     model.load_state_dict(torch.load(model_name))
 
     # 데이터셋 및 데이터 로더 설정
     val_image_dir = '../XAI/Unet/dataset/Flood/val/Image'  # 검증 이미지 데이터셋 경로
     val_mask_dir = '../XAI/Unet/dataset/Flood/val/Mask'    # 검증 마스크 데이터셋 경로
-    test_batch_size = 4
+    test_batch_size = 1
     data_loader = get_loader(val_image_dir, val_mask_dir, kmeans, batch_size=test_batch_size)
 
     X, Y = next(iter(data_loader))
@@ -38,6 +38,9 @@ def main():
     fig, axes = plt.subplots(test_batch_size, 3, figsize=(15, 5 * test_batch_size))
     iou_scores = []
 
+    if test_batch_size == 1:
+        axes = np.expand_dims(axes, axis=0)  # 1차원 배열을 2차원 배열처럼 처리
+
     for i in range(test_batch_size):
         landscape = inverse_transform(X[i]).permute(1, 2, 0).cpu().detach().numpy()
         label_class = Y[i].cpu().detach().numpy()
@@ -49,15 +52,21 @@ def main():
         iou_score = np.sum(intersection) / np.sum(union)
         iou_scores.append(iou_score)
 
-        axes[i, 0].imshow(landscape)
-        axes[i, 0].set_title("Landscape")
-        axes[i, 1].imshow(label_class)
-        axes[i, 1].set_title("Label Class")
-        axes[i, 2].imshow(label_class_predicted)
-        axes[i, 2].set_title("Label Class - Predicted")
-        axes[i, 0].axis('off')
-        axes[i, 1].axis('off')
-        axes[i, 2].axis('off')
+        # 1개 배치일 경우 axes[i]가 아니라 axes 사용
+        ax0 = axes[i, 0] if test_batch_size > 1 else axes[0]
+        ax1 = axes[i, 1] if test_batch_size > 1 else axes[1]
+        ax2 = axes[i, 2] if test_batch_size > 1 else axes[2]
+
+        ax0.imshow(landscape)
+        ax0.set_title("Landscape")
+        ax1.imshow(label_class)
+        ax1.set_title("Label Class")
+        ax2.imshow(label_class_predicted)
+        ax2.set_title("Label Class - Predicted")
+
+        ax0.axis('off')
+        ax1.axis('off')
+        ax2.axis('off')
 
     plt.show()
 
