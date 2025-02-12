@@ -1,4 +1,6 @@
 import os
+
+import cv2
 import numpy as np
 import torch
 from PIL import Image
@@ -49,14 +51,16 @@ class DatasetForSeg(torch.utils.data.Dataset):
             label = label[:, :, np.newaxis]
         if inputs.ndim == 2:
             inputs = inputs[:, :, np.newaxis]
-
-        data = {'input': inputs, 'label': label}
+        input_canny = np.stack([cv2.Canny((inputs[..., i] * 255).astype(np.uint8), 100, 200) for i in range(3)], axis=0)
+        data = {'input': inputs, 'input_canny': input_canny, 'label': label}
+        input_canny = input_canny.transpose(1,2,0)
 
         if self.transform:
             transform_RGB, transform_gray = self.transform[0], self.transform[1]
             transformed_input = transform_RGB(inputs)
             transformed_label = transform_gray(label)
-            data = {'input': transformed_input, 'label': transformed_label}
+            transformed_canny = transform_RGB(input_canny)
+            data = {'input': transformed_input, 'input_canny': transformed_canny, 'label': transformed_label}
         # transform에 할당된 class 들이 호출되면서 __call__ 함수 실행
 
         return data
@@ -66,31 +70,37 @@ class DatasetForSeg(torch.utils.data.Dataset):
         print("### Number of samples:", self.__len__())
 
         random_index = np.random.randint(0, self.__len__())
-        input_tensor, label_tensor = self.__getitem__(random_index)['input'], self.__getitem__(random_index)['label']
+        input_tensor, canny_tensor, label_tensor = self.__getitem__(random_index)['input'],self.__getitem__(random_index)['input_canny'], self.__getitem__(random_index)['label']
         print("### Shape of each image:", input_tensor.shape)
 
         input_numpy = input_tensor.permute(1, 2, 0).numpy()
         input_numpy = input_numpy * 0.5 + 0.5
+
+        canny_numpy = canny_tensor.permute(1, 2, 0).numpy()
+        canny_numpy = canny_numpy * 0.5 + 0.5
+
         label_numpy = label_tensor.squeeze().numpy()
-        print('### shape: ', input_numpy.shape)
-        print('### label_numpy: ', label_numpy.shape)
 
         # To restore values from [0, 1] to [0, 255]
         input_numpy = (input_numpy * 255).astype(np.uint8)
+        canny_numpy = (canny_numpy * 255).astype(np.uint8)
         # print("확인용: ", input_numpy.max(), input_numpy.min())
         label_numpy = (label_numpy).astype(np.uint8)
 
 
         # 이미지로 변환
         input_image = Image.fromarray(input_numpy)
+        canny_image =  Image.fromarray(canny_numpy)
         label_image = Image.fromarray(label_numpy)
 
-        fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+        fig, axes = plt.subplots(1, 3, figsize=(10, 5))
 
         axes[0].imshow(input_image)
         axes[0].set_title("Input")
         axes[1].imshow(label_image, cmap='gray')
         axes[1].set_title("Label")
+        axes[2].imshow(canny_image, cmap='gray')
+        axes[2].set_title("Canny")
         plt.suptitle("Data - Input / Label")  # 전체 제목 설정
         plt.show()
 def data_transform():

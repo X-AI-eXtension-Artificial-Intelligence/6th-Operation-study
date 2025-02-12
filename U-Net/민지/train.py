@@ -43,7 +43,7 @@ def train_model(setting_config: dict):
     test_dir = os.path.join(data_dir, 'test')
 
     transform = data_transform()
-    train_set = DatasetForSeg(data_dir=train_dir, transform=transform)
+    train_set = DatasetForSeg(data_dir=train_dir, transform=transform) ## 여기서 두개로 캐니
     test_set = DatasetForSeg(data_dir=test_dir, transform=transform)
 
     # DataLoader : 미니배치(batch) 단위로 데이터를 제공
@@ -63,17 +63,19 @@ def train_model(setting_config: dict):
     })
 
     loss_arr = []
-    for i in tqdm(range(num_epoch), total=num_epoch, desc='training...'):
+    for i in tqdm(range(num_epoch), total=num_epoch, desc='training...'): # 로그 파일에 비활성화
+        iou = ''
         for batch, data in enumerate(train_loader):
             model.train()
             label = data['label'].to(device)
             inputs = data['input'].to(device)
-            output = model(inputs)  # forward
+            inputs_canny = data['input_canny'].to(device)
+            output = model(inputs, inputs_canny)  # forward
             loss = loss_func(output, label)
 
             pred_mask = (output > 0.5).float()
             iou = calculate_IOU(label, pred_mask)
-            print("\n##### IOU : ", iou)
+            print(f"#### IOU : {iou}  #### batch/epoch : {batch}/{i}")
             wandb.log({"IOU": iou, "epoch": i})
 
             # backward
@@ -90,15 +92,14 @@ def train_model(setting_config: dict):
                 # 단일 데이터이므로 앞에 배치 차원 추가 unsqueeze(0)
                 label_val = test_set[0]['label'].unsqueeze(0).to(device)
                 inputs_val = test_set[0]['input'].unsqueeze(0).to(device)
-                output_val = model(inputs_val)
+                inputs_canny_val = test_set[0]['input_canny'].unsqueeze(0).to(device)
+                output_val = model(inputs_val, inputs_canny_val)
 
                 pred_mask = output_val.squeeze(1)  # (batch, H, W) -> 예측된 segmentation mask
                 label_mask = label_val.squeeze(1)  # GT mask (batch, H, W)
 
                 pred_mask_np = pred_mask[0].cpu().numpy()
-                print('shape of pred_mask: ', pred_mask_np.shape)
                 label_mask_np = label_mask[0].cpu().numpy()
-                print('shape of label_mask_np: ', label_mask_np.shape)
 
                 wandb.log({
                     "Predicted Mask": wandb.Image(pred_mask_np, caption="Prediction"),
@@ -108,19 +109,22 @@ def train_model(setting_config: dict):
         if i%10 == 0:
             print(f'Epoch {i}  Loss : ', loss.item())
             loss_arr.append(loss.cpu().detach().numpy())
+        if i == (num_epoch-1):
+            print('##### final Loss : ', loss.item())
+            print('#### final IOU : ', iou)
 
     wandb.finish()
 
-
     # 학습 완료된 모델 저장
     torch.save(model.state_dict(), setting_config['save_model_path'])
+
 
 if __name__ == '__main__':
     setting_config = {
         "batch_size": 16,
         "learning_rate": 0.001,
-        "num_epoch": 10,
+        "num_epoch": 20,
         "device": torch.device("cuda" if torch.cuda.is_available() else 'cpu'),
-        "save_model_path": "./model/unet_dog.pth"
+        "save_model_path": "./model/unet_dog_3.pth"
     }
     train_model(setting_config)
