@@ -1,25 +1,26 @@
-transformer 구조
+transformer Architecture
 
-- Encoder
+(1) Encoder
 
-Encoder block ----
-[Add&Norm]
-[FFN]
-[Add&Norm]
-[Multi-Head Attn]
--------------------
-[POS Encoding]
-[Input Embedding]
+Encoder block
+- [Add&Norm]
+- [FFN]
+- [Add&Norm]
+- [Multi-Head Attn]
 
-- Decoder
+---
 
-Decoder Block -----------
-[Add&Norm]
-[FFN]
-[Add&Norm]
-[Multi-Head Attn]
-[Add&Norm]
-[Masked Multi-Head Attn]
--------------------------
-[POS Encoding]
-[Output Embedding] -> shifted right
+- [POS Encoding]
+- [Input Embedding]
+
+(2) Decoder
+- Decoder Block
+- [Add&Norm]
+- [FFN]
+- [Add&Norm]
+- [Multi-Head Attn]
+- [Add&Norm]
+- [Masked Multi-Head Attn]
+---
+- [POS Encoding]
+- [Output Embedding] -> shifted right
