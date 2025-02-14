@@ -2,7 +2,7 @@
 
 **(1) Encoder**
 
-Encoder block
+- Encoder block
 - [Add&Norm]
 - [FFN]
 - [Add&Norm]
