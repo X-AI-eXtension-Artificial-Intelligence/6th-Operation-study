@@ -35,10 +35,10 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
                                                  factor=factor,
                                                  patience=patience)
 
-criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
+loss_func = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 
 
-def train(model, train_loader, optimizer, criterion, clip):
+def train(model, train_loader, optimizer, loss_func, clip):
     model.train()
     epoch_loss = 0
     for i, batch in tqdm(enumerate(train_loader), total=len(train_loader), desc='training... '):
@@ -50,7 +50,7 @@ def train(model, train_loader, optimizer, criterion, clip):
         output_reshape = output.contiguous().view(-1, output.shape[-1])
         trg = trg[:, 1:].contiguous().view(-1)
 
-        loss = criterion(output_reshape, trg)
+        loss = loss_func(output_reshape, trg)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
@@ -63,7 +63,7 @@ def train(model, train_loader, optimizer, criterion, clip):
     return epoch_loss / len(train_loader)
 
 
-def evaluate(model, iterator, criterion):
+def evaluate(model, iterator, loss_func):
     model.eval()
     epoch_loss = 0
     batch_bleu = []
@@ -76,7 +76,7 @@ def evaluate(model, iterator, criterion):
             output_reshape = output.contiguous().view(-1, output.shape[-1])
             trg = trg[:, 1:].contiguous().view(-1)
 
-            loss = criterion(output_reshape, trg)
+            loss = loss_func(output_reshape, trg)
             epoch_loss += loss.item()
 
             total_bleu = []
@@ -110,8 +110,8 @@ def evaluate(model, iterator, criterion):
 def run(total_epoch, best_loss):
     train_losses, test_losses, belus = [], [], []
     for step in range(total_epoch):
-        train_loss = train(model, train_loader, optimizer, criterion, clip)
-        valid_loss, bleu = evaluate(model, valid_loader, criterion)
+        train_loss = train(model, train_loader, optimizer, loss_func, clip)
+        valid_loss, bleu = evaluate(model, valid_loader, loss_func)
 
         if step > warmup:
             scheduler.step(valid_loss)
